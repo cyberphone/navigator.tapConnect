@@ -1,0 +1,6 @@
+C:\github.repositories\navigator.tapConnect\host\windows-nfc\NFCWriter\obj\x64\Debug\NFCWriter.csprojResolveAssemblyReference.cache
+C:\github.repositories\navigator.tapConnect\host\windows-nfc\NFCWriter\obj\x64\Debug\NFCWriter.exe
+C:\github.repositories\navigator.tapConnect\host\windows-nfc\NFCWriter\obj\x64\Debug\NFCWriter.pdb
+C:\github.repositories\navigator.tapConnect\host\windows-nfc\NFCWriter\bin\NFCWriter.exe.config
+C:\github.repositories\navigator.tapConnect\host\windows-nfc\NFCWriter\bin\NFCWriter.exe
+C:\github.repositories\navigator.tapConnect\host\windows-nfc\NFCWriter\bin\NFCWriter.pdb
