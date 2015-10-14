@@ -38,7 +38,7 @@ window.addEventListener("message", function(event) {
     } else if (event.data.src === 'webmsg_') {
         console.debug('webmsg_-gotit!');
         chrome.runtime.sendMessage(event.data);
-    } else if (event.data.src === 'natmsg_' || event.data.src === 'natdis_') {
+    } else if (event.data.src === 'natmsg_' || event.data.src === 'natcon_') {
         console.debug('request-gotit:' + chrome.runtime.id);
     } else {
         console.debug('content-other' + event.data.src);
@@ -48,7 +48,7 @@ window.addEventListener("message", function(event) {
 // post messages from extension to injected page
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     console.debug('Got incoming:' + JSON.stringify(request));
-    window.postMessage({req:request,src:request.message ? 'natmsg_' : 'natdis_'}, '*');
+    window.postMessage({req:request,src:request.message ? 'natmsg_' : 'natcon_'}, '*');
 });
 
 // Inject inject.js to the DOM of every page.  A horrible idea but it wasn't mine :-)

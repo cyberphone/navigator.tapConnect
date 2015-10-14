@@ -129,12 +129,7 @@ int main(int argc, char *argv[]) {
 
     strcat(cmd, path);
     strcat(cmd, fs);
-    strcat(cmd, "apps");
-    strcat(cmd, fs);
-    strcat(cmd, application);
-    strcat(cmd, fs);
-    strcat(cmd, application);
-    strcat(cmd, ".jar\" ");
+    strcat(cmd, "nfc-launcher.jar\" ");
 
     // Parameters to called Java program
 

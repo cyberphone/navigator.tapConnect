@@ -35,8 +35,8 @@ org.tapapi.port.prototype.addMessageListener = function(callback) {
    this.messageCallback = callback;
 };
 
-org.tapapi.port.prototype.addDisconnectListener = function(callback) {
-   this.disconnectCallback = callback;
+org.tapapi.port.prototype.addConnectionListener = function(callback) {
+   this.connectionCallback = callback;
 };
 
 org.tapapi.port.prototype.disconnect = function() {
@@ -78,10 +78,10 @@ window.addEventListener("message", function(event) {
         } else {
             // DEBUG
         }
-    } else if (event.data.src === "natdis_") {
+    } else if (event.data.src === "natcon_") {
         // DEBUG
-        if (_ports[event.data.req.tabid].disconnectCallback) {
-            _ports[event.data.req.tabid].disconnectCallback();
+        if (_ports[event.data.req.tabid].connectionCallback) {
+            _ports[event.data.req.tabid].connectionCallback(event.data.req.connect);
         } else {
             // DEBUG
         }

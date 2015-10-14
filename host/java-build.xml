@@ -6,7 +6,7 @@
   <property name="src_dir" value="src.java"/>
   <property name="lib_dir" value="install/libs"/>
   <property name="library" value="webpki.org-libext-1.00.jar"/>
-  <property name="app_name" value="proxy-support.jar"/>
+  <property name="app_name" value="nfc-launcher.jar"/>
   <property name="javaversion" value="1.7" />
   <property name="debug" value="on"/>
   
@@ -31,11 +31,11 @@
            classpathref="compile.classpath"
            includeAntRuntime="false">
     </javac>
-    <jar jarfile="${lib_dir}/${app_name}">
+    <jar jarfile="install/${app_name}">
       <fileset dir="${temp_dir}"/>
       <manifest>
-        <attribute name="Main-Class" value="t.b.d"/>
-        <attribute name="Class-path" value="${library}"/>
+        <attribute name="Main-Class" value="org.webpki.tapconnect.NFCLauncer"/>
+        <attribute name="Class-path" value="libs/${library}"/>
       </manifest>
     </jar>
   </target>

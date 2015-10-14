@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Sample #1</title><style type="text/css">
+input[type="button"] {margin-top:8pt;width:50pt}</style></head><body><script>
+"use strict";
+
+function appendString(string) {
+    var date = new Date()
+    var time = date.getTime();
+    date.setTime(time - date.getTimezoneOffset() * 60000);
+    var localTime = date.toISOString();
+    
+    document.getElementById("response").innerHTML = localTime.substring(0,10) + " " +
+        localTime.substring(11,19) + " " + string + "<br>" + document.getElementById("response").innerHTML;
+}
+
+function appendJSONMessage(message) {
+    var rawString = JSON.stringify(message);
+    var text = "";
+    for (var n = 0; n < rawString.length; n++) {
+        var c = rawString.charAt(n);
+        if (c == "<") {
+            c = "&lt;";
+        } else if (c == ">") {
+            c = "&gt;"; 
+        } else if  (c == "&") {
+            c = "&amp;";
+        }
+        text += c;
+    }
+    appendString(text);
+}
+
+var nativePort = null;
+
+function closeExtension() {
+    if (nativePort) {
+        nativePort.disconnect();
+        nativePort = null;
+    }
+    document.getElementById("state").innerHTML = '';
+}
+
+function setImage(name) {
+        document.getElementById("state").innerHTML = '<img src="' + name + '" style="height:120pt;margin-top:20pt">';
+}
+
+function activateExtension() {
+    if (nativePort) {
+        closeExtension();
+    }
+    if (!navigator.tapConnect) {
+        alert('"navigator.tapConnect" not found, \ncheck Chrome Web2Native Bridge extension settings');
+        return;
+    }
+    navigator.tapConnect('org.webpki.tapconnect.sample1').then(function(port) {
+        nativePort = port;
+        setImage("NFC-N-Mark-Logo.svg");
+        port.addMessageListener(function(message) {
+            appendJSONMessage(message);
+        });
+        port.addConnectionListener(function(initialized) {
+            if (initialized) {
+                appendString("Connected!");
+                setImage("loading-gears-animation-3.gif");
+            } else {
+                appendString("Disconnected!");
+                nativePort = null;
+                closeExtension();
+            }
+        });
+    }, function(err) {
+        console.debug(err);
+    });
+}
+
+function postExtensionData() {
+    if (nativePort) {
+        var message = {};
+        message.web = document.getElementById("data").value;
+        nativePort.postMessage(message);
+        appendJSONMessage(message);
+    } else {
+        appendString("No active client!");
+    }
+}
+
+window.addEventListener("beforeunload", function(event) {
+    closeExtension();
+});
+
+</script>
+<h2>navigator.tapConnect() &quot;Emulator&quot; - Sample #1</h2>
+<input type="button" value="Activate" onclick="activateExtension()"><br>
+<input type="button" value="Close" onclick="closeExtension()"><br>
+<input type="button" value="Send" onclick="postExtensionData()">
+<input type="text" id="data" placeholder="Data to send" size="50" style="margin-left:12pt"><br>
+<div id="state"></div>
+<h3>Messages:</h3>
+<div id="response" style="font-family:courier"></div>
+<div style="border-width:1px;border-style:solid;border-color:#a9a9a9;position:absolute;top:15px;right:15px;z-index:5;padding:5px">The extension should<br>launch in this corner</div>
+</body></html>

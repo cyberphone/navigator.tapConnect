@@ -94,12 +94,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         ports[sender.tab.id] = port;
         port.onMessage.addListener(function(message) {
             console.debug('rec: ' + JSON.stringify(message));
-            chrome.tabs.sendMessage(sender.tab.id, {message:message,tabid:sender.tab.id});
+            if (message["@connect@"]) {
+                chrome.tabs.sendMessage(sender.tab.id, {connect:true,tabid:sender.tab.id});
+            } else {
+                chrome.tabs.sendMessage(sender.tab.id, {message:message,tabid:sender.tab.id});
+            }
         });
         port.onDisconnect.addListener(function() {
             console.debug('native disconnect');
             getDisconnectPort(sender);
-            chrome.tabs.sendMessage(sender.tab.id, {disconnect:true,tabid:sender.tab.id});
+            chrome.tabs.sendMessage(sender.tab.id, {connect:false,tabid:sender.tab.id});
         });
         console.debug('connect: ' + JSON.stringify(request));
         port.postMessage({url:request.origin,
