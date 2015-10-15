@@ -3,4 +3,5 @@
 /host/install/*.exe
 /host/windows-build/TapConnect/Debug
 /host/windows-build/TapConnect.sdf
+/host/windows-build/TapConnect.opensdf
 /host/install/logs/*.*
