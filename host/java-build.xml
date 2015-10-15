@@ -34,7 +34,7 @@
     <jar jarfile="install/${app_name}">
       <fileset dir="${temp_dir}"/>
       <manifest>
-        <attribute name="Main-Class" value="org.webpki.tapconnect.NFCLauncer"/>
+        <attribute name="Main-Class" value="org.webpki.tapconnect.NFCLauncher"/>
         <attribute name="Class-path" value="libs/${library}"/>
       </manifest>
     </jar>
