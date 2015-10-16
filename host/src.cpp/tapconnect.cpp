@@ -71,7 +71,6 @@ int main(int argc, char *argv[]) {
     // 1. Proxy verification which consists of an object {"proxyVersion":"n.nn"}
     // 2. Java application call which consists of an object ("application":"dotted-path",
     //                                                       "url":"invocation-url",
-    //                                                       "windowB64":"base64url-encoded-json-object",
     //                                                       "argumentsB64":"base64url-encoded-json-object"}
 
     // Chrome presumes message length in native order. Not very cool.
@@ -145,11 +144,10 @@ int main(int argc, char *argv[]) {
     strcat(cmd, getJSONProperty("\"url\":"));
     strcat(cmd, "\" ");
 
-    // args[3] => Invoking window core data
-    strcat(cmd, getJSONProperty("\"windowB64\":"));
-    strcat(cmd, " ");
+    // args[3] => There's no window data so we just supply base64url('{}')
+    strcat(cmd, "e30 ");
 
-    // args[4] => Optional arguments to navigator.nativeConnect
+    // args[4] => Optional arguments to navigator.tapConnect
     strcat(cmd, getJSONProperty("\"argumentsB64\":"));
     
     // args[5..n] => Chrome standard arguments
@@ -162,7 +160,7 @@ int main(int argc, char *argv[]) {
     strcat(fileName, fs);
     strcat(fileName, "logs");
     strcat(fileName, fs);
-    strcat(fileName, "last-init-application.log");
+    strcat(fileName, "tapconnect-init.log");
     FILE* logFile = fopen(fileName, "w");
     fprintf(logFile, "commmand: %s\n", cmd);
 

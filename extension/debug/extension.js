@@ -108,7 +108,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         console.debug('connect: ' + JSON.stringify(request));
         port.postMessage({url:request.origin,
                           application:request.application,
-                          windowB64:json2B64(request.window),
                           argumentsB64:json2B64(request.arguments)});
         sendResponse({success:sender.tab.id});
     } else if (request.src === 'webdis_') {
