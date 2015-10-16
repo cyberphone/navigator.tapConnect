@@ -17,21 +17,27 @@
 package org.webpki.tapconnect;
 
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Toolkit;
 import java.awt.Insets;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
+
+import java.io.File;
+
 import java.io.IOException;
-import java.nio.file.Paths;
+
 import java.util.Date;
+
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.SimpleFormatter;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -42,6 +48,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import org.webpki.json.JSONObjectWriter;
+
 import org.webpki.util.ISODateTime;
 
 
@@ -147,36 +154,21 @@ public class NFCLauncher {
     static Logger logger = Logger.getLogger("MyLog");
 
     public static void main(String[] args) {
-        LoggerConfiguration.init(logger, args);
+        try {
+            FileHandler fh = new FileHandler(args[0] + File.separator + "logs" + File.separator + "nfc-launcher.log");
+            logger.addHandler(fh);
+            SimpleFormatter formatter = new SimpleFormatter();
+            fh.setFormatter(formatter);
+        } catch (Exception e) {
+            System.exit(3);
+        }
         for (int i = 0; i < args.length; i++) {
             logger.info("ARG[" + i + "]=" + args[i]);
         }
-        logger.info("DIR=" + NFCLauncher.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-        BrowserWindow browserWindow = null;
-        try {
-            browserWindow = new BrowserWindow(args[3]);
-            logger.info("Browser window: " + browserWindow);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "nativeConnect argument errors", e);
-        }
-        JDialog frame = new JDialog(new JFrame(), "W2NB - Sample #1 [" + args[2] + "]");
+        JFrame frame = new JFrame("W2NB - Sample #1 [" + args[2] + "]");
         ApplicationFrame md = new ApplicationFrame(frame.getContentPane());
         frame.pack();
-        if (browserWindow.screenHeight == 0) {
-        	frame.setLocationRelativeTo(null);
-        } else {
-
-	        // Put the extension window on top of the upper right of the calling (browser)window
-	        // The alignment varies a bit between platforms :-(
-	        Dimension screenDimension = Toolkit.getDefaultToolkit().getScreenSize();
-	        Dimension extensionWindow = frame.getSize();
-	        double factor = screenDimension.height / browserWindow.screenHeight;
-	        double gutter = (browserWindow.outerWidth - browserWindow.innerWidth) / 2;
-	        double x = browserWindow.x + gutter;
-	        x += browserWindow.innerWidth - extensionWindow.width / factor;
-	        double y = browserWindow.y + browserWindow.outerHeight - browserWindow.innerHeight - gutter;
-	        frame.setLocation((int)(x * factor), (int)(y * factor));
-        }
+       	frame.setLocationRelativeTo(null);
         frame.setAlwaysOnTop(true);
 
         frame.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -186,6 +178,7 @@ public class NFCLauncher {
                 System.exit(0);
             }
         });
+        frame.setExtendedState(frame.getExtendedState() | JFrame.ICONIFIED);
         frame.setVisible(true);
         md.start();
     }

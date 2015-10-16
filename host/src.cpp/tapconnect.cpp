@@ -144,13 +144,10 @@ int main(int argc, char *argv[]) {
     strcat(cmd, getJSONProperty("\"url\":"));
     strcat(cmd, "\" ");
 
-    // args[3] => There's no window data so we just supply base64url('{}')
-    strcat(cmd, "e30 ");
-
-    // args[4] => Optional arguments to navigator.tapConnect
+    // args[3] => Optional arguments to navigator.tapConnect
     strcat(cmd, getJSONProperty("\"argumentsB64\":"));
     
-    // args[5..n] => Chrome standard arguments
+    // args[4..n] => Chrome standard arguments
     for (int i = 1; i < argc; i++) {
         strcat(cmd," ");
         strcat(cmd, argv[i]);
