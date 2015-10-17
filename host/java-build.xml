@@ -24,6 +24,12 @@
   
   <target name="build" depends="clean">
     <mkdir dir="${temp_dir}" />
+    <fixcrlf srcdir="${src_dir}"
+       tab="remove"
+       tablength="4"
+       eol="lf"
+       eof="remove"
+       includes="**/*.java"/>
     <javac debug="${debug}"
            source="${javaversion}"
            target="${javaversion}"

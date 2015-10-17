@@ -119,9 +119,9 @@ class StdinJSONPipe {
 
 public class NFCLauncher extends Thread {
     
-	static Logger logger = Logger.getLogger("MyLog");
-	
-	static final int HTTP_PORT = 8099;
+    static Logger logger = Logger.getLogger("MyLog");
+    
+    static final int HTTP_PORT = 8099;
 
     StdinJSONPipe stdin = new StdinJSONPipe();
     StdoutJSONPipe stdout = new StdoutJSONPipe();
@@ -129,45 +129,45 @@ public class NFCLauncher extends Thread {
     JTextField sendText;
 
     class RequestHandler implements HttpHandler {
-    	
-    	public void handle(HttpExchange exchange) throws IOException {
-    		String requestMethod = exchange.getRequestMethod();
-    		if (requestMethod.equalsIgnoreCase("GET")) {
-    			Headers responseHeaders = exchange.getResponseHeaders();
-    			responseHeaders.set("Content-Type", "text/plain");
-    			exchange.sendResponseHeaders(200, 0);
+        
+        public void handle(HttpExchange exchange) throws IOException {
+            String requestMethod = exchange.getRequestMethod();
+            if (requestMethod.equalsIgnoreCase("GET")) {
+                Headers responseHeaders = exchange.getResponseHeaders();
+                responseHeaders.set("Content-Type", "text/plain");
+                exchange.sendResponseHeaders(200, 0);
 
-    			OutputStream responseBody = exchange.getResponseBody();
-    			Headers requestHeaders = exchange.getRequestHeaders();
-    			Set<String> keySet = requestHeaders.keySet();
-    			Iterator<String> iter = keySet.iterator();
-    			while (iter.hasNext()) {
-    				String key = iter.next();
-    				List values = requestHeaders.get(key);
-    				String s = key + " = " + values.toString() + "\n";
-    				responseBody.write(s.getBytes());
-    			}
-    			responseBody.close();
-    		} else if (requestMethod.equalsIgnoreCase("POST")) {
-    			   String request = new String(ArrayUtil.getByteArrayFromInputStream(exchange.getRequestBody()), "UTF-8");
-    			   NFCLauncher.logger.info(request);
-    	           String response = "This is the response";
-    	           Headers responseHeaders = exchange.getResponseHeaders();
-    	           responseHeaders.set("Content-Type", "text/plain");
-    	           exchange.sendResponseHeaders(200, response.length());
-    	           OutputStream os = exchange.getResponseBody();
-    	           os.write(response.getBytes());
-    	           exchange.close();
+                OutputStream responseBody = exchange.getResponseBody();
+                Headers requestHeaders = exchange.getRequestHeaders();
+                Set<String> keySet = requestHeaders.keySet();
+                Iterator<String> iter = keySet.iterator();
+                while (iter.hasNext()) {
+                    String key = iter.next();
+                    List values = requestHeaders.get(key);
+                    String s = key + " = " + values.toString() + "\n";
+                    responseBody.write(s.getBytes());
+                }
+                responseBody.close();
+            } else if (requestMethod.equalsIgnoreCase("POST")) {
+                   String request = new String(ArrayUtil.getByteArrayFromInputStream(exchange.getRequestBody()), "UTF-8");
+                   NFCLauncher.logger.info(request);
+                   String response = "This is the response";
+                   Headers responseHeaders = exchange.getResponseHeaders();
+                   responseHeaders.set("Content-Type", "text/plain");
+                   exchange.sendResponseHeaders(200, response.length());
+                   OutputStream os = exchange.getResponseBody();
+                   os.write(response.getBytes());
+                   exchange.close();
                 update(stdout.writeJSONObject(new JSONObjectWriter().setString("nfc",
-                		request)));
-    		}
-    	}
+                        request)));
+            }
+        }
     }
 
     NFCLauncher(Container pane) {
-    	// Start by initializing the HTTP server
-    	try {
-			HttpServer server = HttpServer.create(new InetSocketAddress(HTTP_PORT), 0);
+        // Start by initializing the HTTP server
+        try {
+            HttpServer server = HttpServer.create(new InetSocketAddress(HTTP_PORT), 0);
             server.createContext("/", new RequestHandler());
             server.setExecutor(Executors.newCachedThreadPool());
             server.start();
@@ -177,7 +177,7 @@ public class NFCLauncher extends Thread {
             System.exit(3);
         }
 
-    	// Then initialize the GUI
+        // Then initialize the GUI
         int fontSize = Toolkit.getDefaultToolkit().getScreenResolution() / 7;
         JLabel msgLabel = new JLabel("Messages:");
         Font font = msgLabel.getFont();
@@ -214,14 +214,14 @@ public class NFCLauncher extends Thread {
         JButton sendBut = new JButton("\u00a0\u00a0\u00a0Send\u00a0\u00a0\u00a0");
         sendBut.setFont(new Font(font.getFontName(), font.getStyle(), fontSize));
         sendBut.addActionListener(new ActionListener() {
-        	boolean init = true;
+            boolean init = true;
             @Override
             public void actionPerformed(ActionEvent event) {
                 try {
-                	if (init) {
-                		init = false;
+                    if (init) {
+                        init = false;
                         stdout.writeJSONObject(new JSONObjectWriter().setBoolean("@connect@", true));
-                	}
+                    }
                     update(stdout.writeJSONObject(new JSONObjectWriter().setString("native",
                                                                                    sendText.getText())));
                 } catch (IOException e) {
@@ -266,11 +266,11 @@ public class NFCLauncher extends Thread {
         }
     }
 
-	static BufferedImage getIcon(String name) throws IOException {
-		return ImageIO.read(NFCLauncher.class.getResourceAsStream (name));
-	}
+    static BufferedImage getIcon(String name) throws IOException {
+        return ImageIO.read(NFCLauncher.class.getResourceAsStream (name));
+    }
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
         Vector<BufferedImage> icons = new Vector<BufferedImage>();
         try {
             FileHandler fh = new FileHandler(args[0] + File.separator + "logs" + File.separator + "nfc-launcher.log");
@@ -289,7 +289,7 @@ public class NFCLauncher extends Thread {
         frame.setIconImages(icons);
         NFCLauncher md = new NFCLauncher(frame.getContentPane());
         frame.pack();
-       	frame.setLocationRelativeTo(null);
+        frame.setLocationRelativeTo(null);
         frame.setAlwaysOnTop(true);
 
         frame.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
