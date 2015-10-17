@@ -7,6 +7,7 @@
   <property name="lib_dir" value="install/libs"/>
   <property name="library" value="webpki.org-libext-1.00.jar"/>
   <property name="app_name" value="nfc-launcher.jar"/>
+  <property name="class_dir" value="org/webpki/tapconnect"/>
   <property name="javaversion" value="1.7" />
   <property name="debug" value="on"/>
   
@@ -33,6 +34,7 @@
     </javac>
     <jar jarfile="install/${app_name}">
       <fileset dir="${temp_dir}"/>
+      <zipfileset dir="app-icons" prefix="${class_dir}"/>
       <manifest>
         <attribute name="Main-Class" value="org.webpki.tapconnect.NFCLauncher"/>
         <attribute name="Class-path" value="libs/${library}"/>
