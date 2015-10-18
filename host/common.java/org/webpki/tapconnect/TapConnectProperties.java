@@ -25,6 +25,7 @@ public interface TapConnectProperties {
     int STANDARD_TIMEOUT         = 5000;
     int BACK_CHANNEL_TIMEOUT     = 100000;
     
+    String CLOSE_JSON            = "@clo.se@";
     String CONTROL_JSON          = "@ctr.l@";
     String APPLICATION_JSON      = "application";
     String OPTIONAL_DATA_JSON    = "optionalData";

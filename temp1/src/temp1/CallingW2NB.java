@@ -115,6 +115,10 @@ public class CallingW2NB {
             init.checkForUnread();
             Vector<String> commands = new Vector<String>();
             commands.add("java");
+            commands.add("-Djava.util.logging.SimpleFormatter.format=%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %2$s %5$s%6$s%n");
+            if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+                commands.add("-Dswing.defaultlaf=com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+            }
             commands.add("-jar");
             commands.add(args[0] + File.separator + "apps" + File.separator + application + File.separator + application + ".jar");
             commands.add(args[0]);
@@ -136,6 +140,9 @@ public class CallingW2NB {
                                                              BACK_CHANNEL_TIMEOUT);
                             if (response.hasProperty(NOTHING_JSON)) {
                                 logger.info("Nothing");
+                            } else if (response.hasProperty(CLOSE_JSON)) {
+                                logger.info("Web-side close");
+                                System.exit(3);
                             } else {
                                 stdout.writeJSONObject(new JSONObjectWriter(response));
                             }

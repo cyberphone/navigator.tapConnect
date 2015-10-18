@@ -33,9 +33,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Executors;
 import java.util.logging.FileHandler;
@@ -216,11 +213,17 @@ public class NFCLauncher extends Thread {
     NFCLauncher(Container pane) {
         // Start by initializing the HTTP server
         try {
-            HttpServer server = HttpServer.create(new InetSocketAddress(HTTP_PORT), 0);
+            final HttpServer server = HttpServer.create(new InetSocketAddress(HTTP_PORT), 0);
             server.createContext("/", new RequestHandler());
             server.setExecutor(Executors.newCachedThreadPool());
             server.start();
             logger.info("Server is listening on port " + HTTP_PORT);
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    server.stop(0);
+                }
+            });
         } catch (Exception e) {
             NFCLauncher.logger.log(Level.SEVERE, "HTTP Server error", e);
             System.exit(3);
@@ -304,6 +307,10 @@ public class NFCLauncher extends Thread {
                 JSONObjectReader webdata = stdin.readJSONObject();  // Hanging until there is something
                 getSynchronizer(true).haveData4You(webdata);        // Yay!
             } catch (IOException e) {
+                try {
+                    getSynchronizer(true).haveData4You(JSONParser.parse(new JSONObjectWriter().setBoolean(CLOSE_JSON, true).toString()));
+                } catch (IOException e1) {
+                }        
                 NFCLauncher.logger.log(Level.SEVERE, "Reading", e);
                 System.exit(3);
             }
