@@ -18,10 +18,17 @@ package org.webpki.tapconnect;
 
 public interface TapConnectProperties {
 
-    String JSON_CONTENT_TYPE = "application/json";
+    String JSON_CONTENT_TYPE     = "application/json";
     
-    int HTTP_PORT            = 8099;
+    int HTTP_PORT                = 8099;
     
-    String CONTROL_JSON      = "control";
-    String APPLICATION_JSON  = "application";
+    int STANDARD_TIMEOUT         = 5000;
+    int BACK_CHANNEL_TIMEOUT     = 100000;
+    
+    String CONTROL_JSON          = "@ctr.l@";
+    String APPLICATION_JSON      = "application";
+    String OPTIONAL_DATA_JSON    = "optionalData";
+    String INVOCATION_URL_JSON   = "url";
+    String MESSAGE_JSON          = "message";
+    String NOTHING_JSON          = "@N/A@";
 }

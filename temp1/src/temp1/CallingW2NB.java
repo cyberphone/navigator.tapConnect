@@ -5,6 +5,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Vector;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import org.webpki.json.JSONObjectReader;
 import org.webpki.json.JSONObjectWriter;
@@ -16,6 +20,8 @@ import static org.webpki.tapconnect.TapConnectProperties.*;
 
 public class CallingW2NB {
     
+    static Logger logger = Logger.getLogger("MyLog");
+
     static Process process;
     static StdinJSONPipe stdin;
     static StdoutJSONPipe stdout;
@@ -77,7 +83,7 @@ public class CallingW2NB {
         }
     }
     
-    synchronized static JSONObjectReader post(String url, JSONObjectWriter json, int timeout) throws IOException {
+    static JSONObjectReader post(String url, JSONObjectWriter json, int timeout) throws IOException {
         HTTPSWrapper wrap = new HTTPSWrapper();
         wrap.setTimeout(timeout);
         wrap.setHeader("Content-Type", JSON_CONTENT_TYPE);
@@ -90,34 +96,69 @@ public class CallingW2NB {
         return JSONParser.parse(wrap.getData());        
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         if (args.length != 2) {
             System.out.println("1: full proxy/install path\n2: URL-to-NFC-service");
             System.exit(3);
         }
         try {
-            JSONObjectReader init = post(args[1], new JSONObjectWriter(), 5000);
+            logger.setUseParentHandlers(false);
+            FileHandler fh = new FileHandler(args[0] + File.separator + "logs" + File.separator + "w2nb-caller.log");
+            logger.addHandler(fh);
+            SimpleFormatter formatter = new SimpleFormatter();
+            fh.setFormatter(formatter);
+            JSONObjectReader init = post(args[1], new JSONObjectWriter(), STANDARD_TIMEOUT);
             System.out.println(init);
-/*
+            String application = init.getString(APPLICATION_JSON);
+            String invocationUrl = init.getString(INVOCATION_URL_JSON);
+            String optionalData = init.getString(OPTIONAL_DATA_JSON);
+            init.checkForUnread();
             Vector<String> commands = new Vector<String>();
             commands.add("java");
             commands.add("-jar");
-            commands.add(args[0] + File.separator + "apps" + File.separator + args[1] + File.separator + args[1] + ".jar");
+            commands.add(args[0] + File.separator + "apps" + File.separator + application + File.separator + application + ".jar");
             commands.add(args[0]);
-            commands.add(args[1]);
-            commands.add("http://evil.com/yeah");
+            commands.add(application);
+            commands.add(invocationUrl);
             commands.add("e30");
-            commands.add("e30");
+            commands.add(optionalData);
             process = Runtime.getRuntime().exec(commands.toArray(new String[0]));
             stdin = new StdinJSONPipe();
             stdout = new StdoutJSONPipe();
+ 
+            new Thread() {
+                @Override
+                public void run() {
+                    while (true) {
+                        try {
+                            JSONObjectReader response = post(args[1],
+                                                             new JSONObjectWriter().setBoolean(CONTROL_JSON, true),
+                                                             BACK_CHANNEL_TIMEOUT);
+                            if (response.hasProperty(NOTHING_JSON)) {
+                                logger.info("Nothing");
+                            } else {
+                                stdout.writeJSONObject(new JSONObjectWriter(response));
+                            }
+                        } catch (Exception e) {
+                            logger.log(Level.SEVERE, "Background", e);
+                            System.exit(3);
+                        }
+                    }
+                }
+            }.start();
+
             while (true) {
-                    stdin.readJSONObject();
-                    System.out.println(stdin.getJSONString());
+                JSONObjectWriter request = new JSONObjectWriter()
+                    .setBoolean(CONTROL_JSON, false);
+                request.setObject(MESSAGE_JSON, stdin.readJSONObject());
+                post(args[1], request, STANDARD_TIMEOUT);
+             }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Big try", e);
+            try {
+                post(args[1], new JSONObjectWriter(), 5000);
+            } catch (IOException e1) {
             }
-*/
-        } catch (IOException e) {
-            e.printStackTrace();
             System.exit(3);
         }
     }

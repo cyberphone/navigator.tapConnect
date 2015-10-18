@@ -124,11 +124,54 @@ public class NFCLauncher extends Thread {
     static Logger logger = Logger.getLogger("MyLog");
 
     static String application;
+    static String invocationUrl;
+    static String optionalData;
 
     StdinJSONPipe stdin = new StdinJSONPipe();
     StdoutJSONPipe stdout = new StdoutJSONPipe();
     JTextArea textArea;
     JTextField sendText;
+    boolean initMode = true;
+
+    class Synchronizer {
+
+        boolean touched;
+        boolean timeout_flag;
+        JSONObjectReader json;
+
+        synchronized boolean perform(int timeout) {
+            while (!touched && !timeout_flag) {
+                try {
+                    wait(timeout);
+                } catch (InterruptedException e) {
+                    return false;
+                }
+                timeout_flag = true;
+            }
+            return touched;
+        }
+
+        synchronized void haveData4You(JSONObjectReader json) {
+            this.json = json;
+            touched = true;
+            notify();
+        }
+    }
+    
+    Synchronizer synchronizer;
+
+    synchronized Synchronizer getSynchronizer (boolean inserter) {
+        if (inserter && synchronizer != null && synchronizer.json != null) {
+            logger.severe("Overrrun!");
+            System.exit(3);
+        }
+        if (synchronizer != null && !synchronizer.timeout_flag) {
+            Synchronizer temp = synchronizer;
+            synchronizer = null;
+            return temp;
+        }
+        return synchronizer = new Synchronizer();
+    }
 
     class RequestHandler implements HttpHandler {
         
@@ -138,10 +181,27 @@ public class NFCLauncher extends Thread {
                 JSONObjectWriter response = new JSONObjectWriter();
                 NFCLauncher.logger.info(request.toString());
                 if (request.hasProperty(CONTROL_JSON)) {
+                    if (request.getBoolean(CONTROL_JSON)) {
+                        Synchronizer sync = getSynchronizer(false);
+                        if (sync.perform(BACK_CHANNEL_TIMEOUT / 2)) {
+                            response = new JSONObjectWriter(sync.json);
+                        } else {
+                            response.setBoolean(NOTHING_JSON, true);
+                        }
+                    } else {
+                        stdout.writeJSONObject(new JSONObjectWriter(request.getObject(MESSAGE_JSON)));
+                    }
                 } else {
-                    response.setString(APPLICATION_JSON, application);
+                    if (initMode) {
+                        stdout.writeJSONObject(new JSONObjectWriter().setBoolean("@connect@", true));
+                        response.setString(APPLICATION_JSON, application);
+                        response.setString(INVOCATION_URL_JSON, invocationUrl);
+                        response.setString(OPTIONAL_DATA_JSON, optionalData);
+                        initMode = false;
+                    } else {
+                        System.exit(3);
+                    }
                 }
-                request.checkForUnread();
                 Headers responseHeaders = exchange.getResponseHeaders();
                 responseHeaders.set("Content-Type", JSON_CONTENT_TYPE);
                 byte[] json = response.serializeJSONObject(JSONOutputFormats.NORMALIZED);
@@ -149,8 +209,7 @@ public class NFCLauncher extends Thread {
                 OutputStream os = exchange.getResponseBody();
                 os.write(json);
                 exchange.close();
-                update(stdout.writeJSONObject(new JSONObjectWriter().setObject("nfc", request)));
-            }
+             }
         }
     }
 
@@ -204,14 +263,9 @@ public class NFCLauncher extends Thread {
         JButton sendBut = new JButton("\u00a0\u00a0\u00a0Send\u00a0\u00a0\u00a0");
         sendBut.setFont(new Font(font.getFontName(), font.getStyle(), fontSize));
         sendBut.addActionListener(new ActionListener() {
-            boolean init = true;
             @Override
             public void actionPerformed(ActionEvent event) {
                 try {
-                    if (init) {
-                        init = false;
-                        stdout.writeJSONObject(new JSONObjectWriter().setBoolean("@connect@", true));
-                    }
                     update(stdout.writeJSONObject(new JSONObjectWriter().setString("native",
                                                                                    sendText.getText())));
                 } catch (IOException e) {
@@ -247,8 +301,8 @@ public class NFCLauncher extends Thread {
     public void run() {
         while (true) {
             try {
-                stdin.readJSONObject();  // Just syntax checking used in our crude sample
-                update(stdin.getJSONString());
+                JSONObjectReader webdata = stdin.readJSONObject();  // Hanging until there is something
+                getSynchronizer(true).haveData4You(webdata);        // Yay!
             } catch (IOException e) {
                 NFCLauncher.logger.log(Level.SEVERE, "Reading", e);
                 System.exit(3);
@@ -276,6 +330,8 @@ public class NFCLauncher extends Thread {
             logger.info("ARG[" + i + "]=" + args[i]);
         }
         application = args[1];
+        invocationUrl = args[2];
+        optionalData = args[3];
         JFrame frame = new JFrame("W2NB - Sample #1 [" + args[2] + "]");
         frame.setIconImages(icons);
         NFCLauncher md = new NFCLauncher(frame.getContentPane());

@@ -52,7 +52,7 @@ function activateExtension() {
         alert('"navigator.tapConnect" not found, \ncheck Chrome Web2Native Bridge extension settings');
         return;
     }
-    navigator.tapConnect('org.webpki.tapconnect.sample1').then(function(port) {
+    navigator.tapConnect('org.webpki.w2nb.sample1').then(function(port) {
         nativePort = port;
         setImage("NFC-N-Mark-Logo.svg");
         port.addMessageListener(function(message) {
@@ -97,5 +97,4 @@ window.addEventListener("beforeunload", function(event) {
 <div id="state"></div>
 <h3>Messages:</h3>
 <div id="response" style="font-family:courier"></div>
-<div style="border-width:1px;border-style:solid;border-color:#a9a9a9;position:absolute;top:15px;right:15px;z-index:5;padding:5px">The extension should<br>launch in this corner</div>
 </body></html>
