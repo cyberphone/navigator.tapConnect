@@ -3,13 +3,12 @@
   <!-- set global properties for this build -->
 
   <property name="temp_dir" location=".tmp" />
-  <property name="src_dir" value="src.java"/>
-  <property name="common_dir" value="common.java"/>
-  <property name="lib_dir" value="install/libs"/>
-  <property name="dist_dir" value="install"/>
+  <property name="src_dir" value="src"/>
+  <property name="common_dir" value="../host/common.java"/>
+  <property name="lib_dir" value="../host/install/libs"/>
+  <property name="dist_dir" value="dist"/>
   <property name="library" value="webpki.org-libext-1.00.jar"/>
-  <property name="app_name" value="nfc-launcher.jar"/>
-  <property name="class_dir" value="org/webpki/tapconnect"/>
+  <property name="app_name" value="callingw2nb.jar"/>
   <property name="javaversion" value="1.7" />
   <property name="debug" value="on"/>
   
@@ -32,12 +31,6 @@
        eol="lf"
        eof="remove"
        includes="**/*.java"/>
-    <fixcrlf srcdir="${common_dir}"
-       tab="remove"
-       tablength="4"
-       eol="lf"
-       eof="remove"
-       includes="**/*.java"/>
     <javac debug="${debug}"
            source="${javaversion}"
            target="${javaversion}"
@@ -48,10 +41,9 @@
     </javac>
     <jar jarfile="${dist_dir}/${app_name}">
       <fileset dir="${temp_dir}"/>
-      <zipfileset dir="app-icons" prefix="${class_dir}"/>
       <manifest>
-        <attribute name="Main-Class" value="org.webpki.tapconnect.NFCLauncher"/>
-        <attribute name="Class-path" value="libs/${library}"/>
+        <attribute name="Main-Class" value="temp1.CallingW2NB"/>
+        <attribute name="Class-path" value="../${lib_dir}/${library}"/>
       </manifest>
     </jar>
   </target>

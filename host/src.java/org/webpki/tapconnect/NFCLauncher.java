@@ -64,6 +64,8 @@ import org.webpki.json.JSONParser;
 import org.webpki.util.ArrayUtil;
 import org.webpki.util.ISODateTime;
 
+import static org.webpki.tapconnect.TapConnectProperties.*;
+
 // A very prototype-ish NFCLauncher using HTTP/WiFi rather than BLE but
 // it at least works for demonstrating the navigator.tapConnect() concept :-)
 
@@ -120,8 +122,8 @@ class StdinJSONPipe {
 public class NFCLauncher extends Thread {
     
     static Logger logger = Logger.getLogger("MyLog");
-    
-    static final int HTTP_PORT = 8099;
+
+    static String application;
 
     StdinJSONPipe stdin = new StdinJSONPipe();
     StdoutJSONPipe stdout = new StdoutJSONPipe();
@@ -131,35 +133,23 @@ public class NFCLauncher extends Thread {
     class RequestHandler implements HttpHandler {
         
         public void handle(HttpExchange exchange) throws IOException {
-            String requestMethod = exchange.getRequestMethod();
-            if (requestMethod.equalsIgnoreCase("GET")) {
-                Headers responseHeaders = exchange.getResponseHeaders();
-                responseHeaders.set("Content-Type", "text/plain");
-                exchange.sendResponseHeaders(200, 0);
-
-                OutputStream responseBody = exchange.getResponseBody();
-                Headers requestHeaders = exchange.getRequestHeaders();
-                Set<String> keySet = requestHeaders.keySet();
-                Iterator<String> iter = keySet.iterator();
-                while (iter.hasNext()) {
-                    String key = iter.next();
-                    List values = requestHeaders.get(key);
-                    String s = key + " = " + values.toString() + "\n";
-                    responseBody.write(s.getBytes());
+            if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
+                JSONObjectReader request = JSONParser.parse(ArrayUtil.getByteArrayFromInputStream(exchange.getRequestBody()));
+                JSONObjectWriter response = new JSONObjectWriter();
+                NFCLauncher.logger.info(request.toString());
+                if (request.hasProperty(CONTROL_JSON)) {
+                } else {
+                    response.setString(APPLICATION_JSON, application);
                 }
-                responseBody.close();
-            } else if (requestMethod.equalsIgnoreCase("POST")) {
-                   String request = new String(ArrayUtil.getByteArrayFromInputStream(exchange.getRequestBody()), "UTF-8");
-                   NFCLauncher.logger.info(request);
-                   String response = "This is the response";
-                   Headers responseHeaders = exchange.getResponseHeaders();
-                   responseHeaders.set("Content-Type", "text/plain");
-                   exchange.sendResponseHeaders(200, response.length());
-                   OutputStream os = exchange.getResponseBody();
-                   os.write(response.getBytes());
-                   exchange.close();
-                update(stdout.writeJSONObject(new JSONObjectWriter().setString("nfc",
-                        request)));
+                request.checkForUnread();
+                Headers responseHeaders = exchange.getResponseHeaders();
+                responseHeaders.set("Content-Type", JSON_CONTENT_TYPE);
+                byte[] json = response.serializeJSONObject(JSONOutputFormats.NORMALIZED);
+                exchange.sendResponseHeaders(200, json.length);
+                OutputStream os = exchange.getResponseBody();
+                os.write(json);
+                exchange.close();
+                update(stdout.writeJSONObject(new JSONObjectWriter().setObject("nfc", request)));
             }
         }
     }
@@ -285,6 +275,7 @@ public class NFCLauncher extends Thread {
         for (int i = 0; i < args.length; i++) {
             logger.info("ARG[" + i + "]=" + args[i]);
         }
+        application = args[1];
         JFrame frame = new JFrame("W2NB - Sample #1 [" + args[2] + "]");
         frame.setIconImages(icons);
         NFCLauncher md = new NFCLauncher(frame.getContentPane());
