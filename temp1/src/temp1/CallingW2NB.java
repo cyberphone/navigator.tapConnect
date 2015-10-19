@@ -4,7 +4,9 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+
 import java.util.Vector;
+
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,7 +16,10 @@ import org.webpki.json.JSONObjectReader;
 import org.webpki.json.JSONObjectWriter;
 import org.webpki.json.JSONOutputFormats;
 import org.webpki.json.JSONParser;
+
 import org.webpki.net.HTTPSWrapper;
+
+// CLI test program for manually activating the target application
 
 import static org.webpki.tapconnect.TapConnectProperties.*;
 
@@ -101,18 +106,21 @@ public class CallingW2NB {
             System.out.println("1: full proxy/install path\n2: URL-to-NFC-service");
             System.exit(3);
         }
+        String step = "initial";
         try {
             logger.setUseParentHandlers(false);
+            System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %2$s %5$s%6$s%n");
             FileHandler fh = new FileHandler(args[0] + File.separator + "logs" + File.separator + "w2nb-caller.log");
             logger.addHandler(fh);
             SimpleFormatter formatter = new SimpleFormatter();
             fh.setFormatter(formatter);
             JSONObjectReader init = post(args[1], new JSONObjectWriter(), STANDARD_TIMEOUT);
-            System.out.println(init);
+            logger.info("Invocation:" + init);
             String application = init.getString(APPLICATION_JSON);
             String invocationUrl = init.getString(INVOCATION_URL_JSON);
             String optionalData = init.getString(OPTIONAL_DATA_JSON);
             init.checkForUnread();
+            step = "starting";
             Vector<String> commands = new Vector<String>();
             commands.add("java");
             commands.add("-Djava.util.logging.SimpleFormatter.format=%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %2$s %5$s%6$s%n");
@@ -129,6 +137,7 @@ public class CallingW2NB {
             process = Runtime.getRuntime().exec(commands.toArray(new String[0]));
             stdin = new StdinJSONPipe();
             stdout = new StdoutJSONPipe();
+            step = "I/O";
  
             new Thread() {
                 @Override
@@ -155,15 +164,17 @@ public class CallingW2NB {
             }.start();
 
             while (true) {
-                JSONObjectWriter request = new JSONObjectWriter()
-                    .setBoolean(CONTROL_JSON, false);
-                request.setObject(MESSAGE_JSON, stdin.readJSONObject());
-                post(args[1], request, STANDARD_TIMEOUT);
+                post(args[1],
+                     new JSONObjectWriter()
+                         .setBoolean(CONTROL_JSON, false)
+                         .setObject(MESSAGE_JSON, stdin.readJSONObject()),
+                     STANDARD_TIMEOUT);
              }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Big try", e);
+            logger.log(Level.SEVERE, step, e);
             try {
-                post(args[1], new JSONObjectWriter(), 5000);
+                // Final effort telling the world that we are closing for today...
+                post(args[1], new JSONObjectWriter(), STANDARD_TIMEOUT);
             } catch (IOException e1) {
             }
             System.exit(3);

@@ -176,7 +176,7 @@ public class NFCLauncher extends Thread {
             if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
                 JSONObjectReader request = JSONParser.parse(ArrayUtil.getByteArrayFromInputStream(exchange.getRequestBody()));
                 JSONObjectWriter response = new JSONObjectWriter();
-                NFCLauncher.logger.info(request.toString());
+                logger.info(request.toString());
                 if (request.hasProperty(CONTROL_JSON)) {
                     if (request.getBoolean(CONTROL_JSON)) {
                         Synchronizer sync = getSynchronizer(false);
@@ -225,7 +225,7 @@ public class NFCLauncher extends Thread {
                 }
             });
         } catch (Exception e) {
-            NFCLauncher.logger.log(Level.SEVERE, "HTTP Server error", e);
+            logger.log(Level.SEVERE, "HTTP Server error", e);
             System.exit(3);
         }
 
@@ -272,7 +272,7 @@ public class NFCLauncher extends Thread {
                     update(stdout.writeJSONObject(new JSONObjectWriter().setString("native",
                                                                                    sendText.getText())));
                 } catch (IOException e) {
-                    NFCLauncher.logger.log(Level.SEVERE, "Writing", e);
+                    logger.log(Level.SEVERE, "Writing", e);
                     System.exit(3);
                 }
             }
@@ -297,7 +297,7 @@ public class NFCLauncher extends Thread {
         String localTime = ISODateTime.formatDateTime(new Date(), false);
         textArea.setText(localTime.substring(0, 10) + " " + localTime.substring(11, 19) +
             " " + text + "\n" + textArea.getText());
-        NFCLauncher.logger.info(text);
+        logger.info(text);
     }
 
     @Override
@@ -308,10 +308,11 @@ public class NFCLauncher extends Thread {
                 getSynchronizer(true).haveData4You(webdata);        // Yay!
             } catch (IOException e) {
                 try {
+                    // Final effort telling the world that we are closing for today...
                     getSynchronizer(true).haveData4You(JSONParser.parse(new JSONObjectWriter().setBoolean(CLOSE_JSON, true).toString()));
                 } catch (IOException e1) {
                 }        
-                NFCLauncher.logger.log(Level.SEVERE, "Reading", e);
+                logger.log(Level.SEVERE, "Reading", e);
                 System.exit(3);
             }
         }
@@ -324,6 +325,7 @@ public class NFCLauncher extends Thread {
     public static void main(String[] args) {
         Vector<BufferedImage> icons = new Vector<BufferedImage>();
         try {
+            logger.setUseParentHandlers(false);
             FileHandler fh = new FileHandler(args[0] + File.separator + "logs" + File.separator + "nfc-launcher.log");
             logger.addHandler(fh);
             SimpleFormatter formatter = new SimpleFormatter();
