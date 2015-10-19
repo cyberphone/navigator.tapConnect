@@ -7,3 +7,4 @@
 :: Deletes the entries created by install_host.bat
 REG DELETE "HKCU\Software\Google\Chrome\NativeMessagingHosts\org.webpki.tapconnect" /f
 DEL /Q "%~dp0TapConnect.exe"
+DEL /Q "%~dp0NFCWriter.exe"

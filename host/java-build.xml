@@ -49,6 +49,7 @@
     <jar jarfile="${dist_dir}/${app_name}">
       <fileset dir="${temp_dir}"/>
       <zipfileset dir="app-icons" prefix="${class_dir}"/>
+      <zipfileset dir="images" prefix="${class_dir}"/>
       <manifest>
         <attribute name="Main-Class" value="org.webpki.tapconnect.NFCLauncher"/>
         <attribute name="Class-path" value="libs/${library}"/>

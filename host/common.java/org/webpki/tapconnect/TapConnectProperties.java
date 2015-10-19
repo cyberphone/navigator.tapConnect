@@ -24,12 +24,16 @@ public interface TapConnectProperties {
     
     int STANDARD_TIMEOUT         = 5000;
     int BACK_CHANNEL_TIMEOUT     = 100000;
-    
+
+    // Control messages that are supposed to not interfere with "real" messages
+
     String CLOSE_JSON            = "@clo.se@";
     String CONTROL_JSON          = "@ctr.l@";
+    String NOTHING_JSON          = "@N/A@";
+
+    // Invocation data from the calling Web-page
     String APPLICATION_JSON      = "application";
     String OPTIONAL_DATA_JSON    = "optionalData";
-    String INVOCATION_URL_JSON   = "url";
+    String INVOCATION_URL_JSON   = "invocationUrl";
     String MESSAGE_JSON          = "message";
-    String NOTHING_JSON          = "@N/A@";
 }

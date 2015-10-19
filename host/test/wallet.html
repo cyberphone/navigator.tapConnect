@@ -76,12 +76,17 @@ function closeExtension() {
         nativePort.disconnect();
         nativePort = null;
     }
+    document.getElementById("state").innerHTML = '';
 }
 
 function sendMessageConditional(message) {
     if (nativePort) {
         nativePort.postMessage(message);
     }
+}
+
+function setImage(name) {
+    document.getElementById("state").innerHTML = '<img src="' + name + '" style="height:120pt;margin-top:20pt">';
 }
 
 function activateExtension() {
@@ -97,6 +102,7 @@ function activateExtension() {
     }
     navigator.tapConnect('org.webpki.webpay.wallet2').then(function(port) {
         nativePort = port;
+        setImage("NFC-N-Mark-Logo.svg");
         port.addMessageListener(function(message) {
             if (message["@context"] != "http://xmlns.webpki.org/webpay/v1") {
                 setString("Missing or wrong \"@context\"");
@@ -139,13 +145,15 @@ function activateExtension() {
                 }, 1000);
             }
         });
-        port.addConnectionListener(function(initialize) {
-            if (initialize) {
+        port.addConnectionListener(function(initialized) {
+            if (initialized) {
+                setImage("loading-gears-animation-3.gif");
             } else {
                 if (nativePort) {
                     setString("Application Unexpectedly disconnected");
                 }
                 nativePort = null;
+                closeExtension();
             }
         });
     }, function(err) {
@@ -169,6 +177,7 @@ window.addEventListener("beforeunload", function(event) {
 <input type="radio" name="test" value="Syntax">Bad message syntax<br>
 <input type="radio" name="test" value="Signature">Bad signature<br>
 </form>
+<div id="state"></div>
 <div style="margin-top:10pt;margin-bottom:10pt">Result:</div>
 <div id="response" style="font-family:courier;font-size:10pt;word-wrap:break-word;width:800pt"></div>
 </body></html>

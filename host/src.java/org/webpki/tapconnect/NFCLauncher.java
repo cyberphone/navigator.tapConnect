@@ -22,32 +22,39 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Toolkit;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
+
 import java.awt.image.BufferedImage;
+
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Date;
+import java.net.NetworkInterface;
+
+import java.util.Enumeration;
 import java.util.Vector;
+
 import java.util.concurrent.Executors;
+
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.logging.SimpleFormatter;
 
 import javax.imageio.ImageIO;
-import javax.swing.JButton;
+
+import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -58,8 +65,8 @@ import org.webpki.json.JSONObjectReader;
 import org.webpki.json.JSONObjectWriter;
 import org.webpki.json.JSONOutputFormats;
 import org.webpki.json.JSONParser;
+
 import org.webpki.util.ArrayUtil;
-import org.webpki.util.ISODateTime;
 
 import static org.webpki.tapconnect.TapConnectProperties.*;
 
@@ -123,11 +130,16 @@ public class NFCLauncher extends Thread {
     static String application;
     static String invocationUrl;
     static String optionalData;
+    
+    static String ipAddress;
+    
+    static ImageIcon nfcLogo;
+    JLabel nfcIconLabel;
+
+    static ImageIcon connectedIcon;
 
     StdinJSONPipe stdin = new StdinJSONPipe();
     StdoutJSONPipe stdout = new StdoutJSONPipe();
-    JTextArea textArea;
-    JTextField sendText;
     boolean initMode = true;
 
     class Synchronizer {
@@ -195,6 +207,12 @@ public class NFCLauncher extends Thread {
                         response.setString(INVOCATION_URL_JSON, invocationUrl);
                         response.setString(OPTIONAL_DATA_JSON, optionalData);
                         initMode = false;
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                nfcIconLabel.setIcon(connectedIcon);
+                            }
+                        });
                     } else {
                         System.exit(3);
                     }
@@ -231,73 +249,38 @@ public class NFCLauncher extends Thread {
 
         // Then initialize the GUI
         int fontSize = Toolkit.getDefaultToolkit().getScreenResolution() / 7;
-        JLabel msgLabel = new JLabel("Messages:");
-        Font font = msgLabel.getFont();
+        JLabel urlMessageLabel = new JLabel("Invocation URL:");
+        Font font = urlMessageLabel.getFont();
         boolean macOS = System.getProperty("os.name").toLowerCase().contains("mac");
         if (font.getSize() > fontSize || macOS) {
             fontSize = font.getSize();
         }
+        Font stdFont = new Font(font.getFontName(), font.getStyle(), fontSize);
         int stdInset = fontSize/3;
-        msgLabel.setFont(new Font(font.getFontName(), font.getStyle(), fontSize));
+        urlMessageLabel.setFont(stdFont);
         pane.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.weightx = 0.0;
-        c.anchor = GridBagConstraints.WEST;
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.NORTHWEST;
         c.fill = GridBagConstraints.NONE;
         c.gridx = 0;
         c.gridy = 0;
-        c.gridwidth = 2;
         c.insets = new Insets(stdInset, stdInset, stdInset, stdInset);
-        pane.add(msgLabel, c);
+        pane.add(urlMessageLabel, c);
 
-        textArea = new JTextArea();
-        textArea.setRows(20);
-        textArea.setFont(new Font("Courier", Font.PLAIN, fontSize));
-        textArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1.0;
-        c.weighty = 1.0;
-        c.gridwidth = 2;
+        JLabel urlLabel = new JLabel(ipAddress);
+        urlLabel.setFont(stdFont);
         c.gridy = 1;
-        c.insets = new Insets(0, stdInset, 0, stdInset);
-        pane.add(scrollPane , c);
+        c.insets = new Insets(0, stdInset * 2, 0, stdInset);
+        pane.add(urlLabel, c);
 
-        JButton sendBut = new JButton("\u00a0\u00a0\u00a0Send\u00a0\u00a0\u00a0");
-        sendBut.setFont(new Font(font.getFontName(), font.getStyle(), fontSize));
-        sendBut.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                try {
-                    update(stdout.writeJSONObject(new JSONObjectWriter().setString("native",
-                                                                                   sendText.getText())));
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, "Writing", e);
-                    System.exit(3);
-                }
-            }
-        });
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.0;
-        c.weighty = 0.0;
-        c.gridwidth = 1;
+        nfcIconLabel = new JLabel(nfcLogo);
+        c.weighty = 1.0;
         c.gridy = 2;
-        c.insets = new Insets(stdInset, stdInset, stdInset, 0);
-        pane.add(sendBut, c);
-
-        sendText = new JTextField(50);
-        sendText.setFont(new Font("Courier", Font.PLAIN, fontSize));
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridx = 1;
-        c.insets = new Insets(stdInset, stdInset, stdInset, stdInset);
-        pane.add(sendText, c);
-    }
-
-    void update(String text) {
-        String localTime = ISODateTime.formatDateTime(new Date(), false);
-        textArea.setText(localTime.substring(0, 10) + " " + localTime.substring(11, 19) +
-            " " + text + "\n" + textArea.getText());
-        logger.info(text);
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, fontSize * 3, 0, fontSize * 3);
+        pane.add(nfcIconLabel, c);
     }
 
     @Override
@@ -319,7 +302,11 @@ public class NFCLauncher extends Thread {
     }
 
     static BufferedImage getIcon(String name) throws IOException {
-        return ImageIO.read(NFCLauncher.class.getResourceAsStream (name));
+        return ImageIO.read(NFCLauncher.class.getResourceAsStream(name));
+    }
+
+    static ImageIcon getImageIcon(String name) throws IOException {
+        return new ImageIcon(ArrayUtil.getByteArrayFromInputStream(NFCLauncher.class.getResourceAsStream(name)));
     }
 
     public static void main(String[] args) {
@@ -332,7 +319,37 @@ public class NFCLauncher extends Thread {
             fh.setFormatter(formatter);
             icons.add(getIcon("nfc32.png"));
             icons.add(getIcon("nfc64.png"));
+            nfcLogo = getImageIcon("nfc-logo-vector.png");
+            connectedIcon = getImageIcon("loading-gears-animation-3.gif");
+            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+            int foundAddresses = 0;
+            while (networkInterfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = networkInterfaces.nextElement();
+                if (networkInterface.isUp() && !networkInterface.isVirtual() && !networkInterface.isLoopback() &&
+                    networkInterface.getDisplayName().indexOf("VMware") < 0) {  // Well....
+                    Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
+                    while (inetAddresses.hasMoreElements()) {
+                        InetAddress inetAddress = inetAddresses.nextElement();
+                        if (inetAddress instanceof Inet4Address) {
+                            foundAddresses++;
+                            ipAddress = "http://" + inetAddress.getHostAddress() + ":" + HTTP_PORT;
+                        }
+                    }
+                }
+            }
+            if (foundAddresses != 1) {
+                throw new IOException("Couldn't determine network interface!'");
+            }
+            final Process nfc = Runtime.getRuntime().exec(new String[]{args[0] + File.separator + "NFCWriter.exe",
+                                                                       ipAddress});
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    nfc.destroy();
+                }
+            });
         } catch (Exception e) {
+            logger.log(Level.SEVERE, "Initialization failed", e);
             System.exit(3);
         }
         for (int i = 0; i < args.length; i++) {
@@ -341,7 +358,7 @@ public class NFCLauncher extends Thread {
         application = args[1];
         invocationUrl = args[2];
         optionalData = args[3];
-        JFrame frame = new JFrame("W2NB - Sample #1 [" + args[2] + "]");
+        JFrame frame = new JFrame("NFC Launcher");
         frame.setIconImages(icons);
         NFCLauncher md = new NFCLauncher(frame.getContentPane());
         frame.pack();
