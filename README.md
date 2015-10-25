@@ -41,4 +41,4 @@ navigator.tapConnect('com.example.myapp').then(function(port) {
     console.debug(err);
 });
 ```
-The argument to **tapConnect** holds the name of the specifically adapted local application to invoke.   The current scheme uses a Java-inspired dotted path pointing to a subdirectory and JAR-application having this name.
+The argument to **tapConnect** holds the name of the specifically adapted local application to invoke.   The current scheme uses a Java-inspired dotted path which is supposed to be mapped to the external device's OS in an OS-specific way.
