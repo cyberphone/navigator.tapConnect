@@ -20,7 +20,7 @@ and false when the connection terminates.
 
 An example which could be hosted in an ordinary (*non-privileged*) web page:
 ```javascript
-navigator.nativeConnect('com.example.myapp').then(function(port) {
+navigator.tapConnect('com.example.myapp').then(function(port) {
 
     port.addMessageListener(function(message) {
         // We got a message from the external application...
