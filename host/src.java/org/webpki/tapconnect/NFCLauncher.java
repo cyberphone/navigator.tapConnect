@@ -317,6 +317,12 @@ public class NFCLauncher extends Thread {
             logger.addHandler(fh);
             SimpleFormatter formatter = new SimpleFormatter();
             fh.setFormatter(formatter);
+            for (int i = 0; i < args.length; i++) {
+                logger.info("ARG[" + i + "]=" + args[i]);
+            }
+            application = args[1];
+            invocationUrl = args[2];
+            optionalData = args[3];
             icons.add(getIcon("nfc32.png"));
             icons.add(getIcon("nfc64.png"));
             nfcLogo = getImageIcon("nfc-logo-vector.png");
@@ -337,6 +343,9 @@ public class NFCLauncher extends Thread {
                     }
                 }
             }
+            if (application.equals("webauth.demo")) {
+                ipAddress = JSONParser.parse(org.webpki.util.Base64URL.decode(optionalData)).getString("callme");
+            }
             if (foundAddresses != 1) {
                 throw new IOException("Couldn't determine network interface!'");
             }
@@ -352,12 +361,6 @@ public class NFCLauncher extends Thread {
             logger.log(Level.SEVERE, "Initialization failed", e);
             System.exit(3);
         }
-        for (int i = 0; i < args.length; i++) {
-            logger.info("ARG[" + i + "]=" + args[i]);
-        }
-        application = args[1];
-        invocationUrl = args[2];
-        optionalData = args[3];
         JFrame frame = new JFrame("NFC Launcher");
         frame.setIconImages(icons);
         NFCLauncher md = new NFCLauncher(frame.getContentPane());
