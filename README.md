@@ -29,6 +29,8 @@ navigator.tapConnect('com.example.myapp').then(function(port) {
     port.addConnectionListener(function(initialized) {
         if (initialized) {
            // Someone tapped!
+        } else {
+           // Exernal application disconnected
         }
     });
 
