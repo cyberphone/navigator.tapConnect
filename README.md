@@ -2,6 +2,8 @@
 
 This is a highly experimental project.  You better keep out for a while :-)
 
+https://cyberphone.github.io/openkeystore/resources/docs/webnfc--web2device-bridge.pdf
+
 ### API
 This API extends the **navigator** object by a *single* method<br>
 **tapConnect**('*Name of target application*' [, *optionalArgument*]) which
