@@ -7,8 +7,8 @@ https://cyberphone.github.io/openkeystore/resources/docs/tapConnect.pdf
 
 ### API
 This API extends the **navigator** object by a *single* method<br>
-**tapConnect**('*Name of target application*' [, *optionalArgument*]) which
-returns a JavaScript **Promise** to a **port** object.
+&nbsp;&nbsp;&nbsp;&nbsp;**tapConnect**('*Name of target application*' [, *optionalArgument*])<br>
+which returns a JavaScript **Promise** to a **port** object.
 
 The **port** object supports the following methods and events:
 * **postMessage**(*message*)
